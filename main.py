@@ -102,7 +102,11 @@ def shroom_update_cycle(): # Цикл обновления игры
                 yeasts += (1 + int(1.1**yeastLvl))*3
             else:
                 yeasts += 1 + int(1.1**yeastLvl)
-
+               
+            # Останавливаем движ, если дрожжей слишком много
+            if (yeasts > 2000000000):
+                yeasts = 2000000000
+           
             # Не даём грибу уйти в минус
             if size < 1:
                 size = 1
