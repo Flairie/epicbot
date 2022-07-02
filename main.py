@@ -361,7 +361,7 @@ def cmd_createshroom(update, context):
     fetch = CURSOR.fetchone()
 
     if fetch == None:
-        CURSOR.execute ("INSERT INTO users (userid, name, balance) VALUES ("+str(userId)+", '"+userName+"', 1)")
+        CURSOR.execute ("INSERT INTO users (userid, name, balance, inventory) VALUES ("+str(userId)+", '"+userName+"', 1, '0-1')")
         DATABASE.commit()
         context.bot.send_message(chat_id=update.effective_chat.id, text="Чайный гриб создан")
 
@@ -401,6 +401,41 @@ def cmd_checkshroom(update, context):
 
         context.bot.send_message(chat_id=update.effective_chat.id, text=balanceMessage)
 
+# Инвентарь
+def cmd_inventory(update, context):
+    userId = update.message.from_user.id;
+
+    CURSOR.execute ("SELECT inventory FROM users WHERE userid="+str(userId))
+    fetch = CURSOR.fetchone()
+    
+    inventoryString = fetch[0]
+    
+    if (inventoryString == ""):
+        context.bot.send_message(chat_id=update.effective_chat.id, text="Инвентарь пуст")
+    else:
+        inventorySlots = inventoryString.split(";")
+        
+        output = "*Инвентарь*\n\n"
+        
+        for i in range(len(inventorySlots)):
+            inventorySlot = inventorySlots[i].split("-")
+            
+            CURSOR.execute ("SELECT itemname, description, costalgae, cost FROM items WHERE itemid="+inventorySlot[0])
+            fetch = CURSOR.fetchone()
+            
+            itemName = fetch[0]
+            itemDesc = fetch[1]
+            itemIsal = fetch[2]
+            itemCost = fetch[3]
+            
+            if itemIsal:
+                currency = "водорослей"
+            else:
+                currency = "дрожжей"
+            
+            output += f"*{i+1}. {itemName}* x {inventorySlot[1]}\n_Цена:_ {str(itemCost)} {currency}\n_Описание:_ {itemDesc}\n"
+        
+        context.bot.send_message(chat_id=update.effective_chat.id, text=output, parse_mode="Markdown")
 
 # Улучшения
 def cmd_upgrade(update, context):
@@ -460,8 +495,6 @@ def cmd_upgrade(update, context):
             CURSOR.execute (f"UPDATE users SET yeasts = {yeasts}, lucklvl = {luckLvl}, growlvl = {growLvl}, randLvl = {randLvl}, yeastlvl = {yeastLvl}, randspeedlvl = {randSpeedLvl} WHERE userid = {userId}")
             DATABASE.commit()
 
-def cmd_start(update, context):
-    context.bot.send_message(chat_id=update.effective_chat.id, text="Привет, я культурный бот!")
 
 ## Устанавливаем какие-то держатели
 from telegram.ext import CommandHandler
@@ -473,6 +506,7 @@ shop_handler = CommandHandler('shop', cmd_shop)
 checkshroom_handler = CommandHandler('checkshroom', cmd_checkshroom)
 random_handler = CommandHandler('random', cmd_random)
 upgrade_handler = CommandHandler('upgrade', cmd_upgrade)
+inventory_handler = CommandHandler('inventory', cmd_inventory)
 
 # Устанавливаем какие-то держатели окончательно
 dispatcher.add_handler(nuclear_handler)
@@ -482,6 +516,7 @@ dispatcher.add_handler(shop_handler)
 dispatcher.add_handler(checkshroom_handler)
 dispatcher.add_handler(random_handler)
 dispatcher.add_handler(upgrade_handler)
+dispatcher.add_handler(inventory_handler)
 
 # Запускаем автообновлялку
 threading.Thread(target=shroom_update_cycle).start()
