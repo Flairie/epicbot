@@ -473,7 +473,6 @@ shop_handler = CommandHandler('shop', cmd_shop)
 checkshroom_handler = CommandHandler('checkshroom', cmd_checkshroom)
 random_handler = CommandHandler('random', cmd_random)
 upgrade_handler = CommandHandler('upgrade', cmd_upgrade)
-start_handler = CommandHandler('nuclear', cmd_nuclear)
 
 # Устанавливаем какие-то держатели окончательно
 dispatcher.add_handler(nuclear_handler)
